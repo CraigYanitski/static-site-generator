@@ -2,12 +2,12 @@ from enum import Enum
 from leafnode import LeafNode
 
 class TextType(Enum):
-    NORMAL = "normal"
-    BOLD = "bold"
-    ITALIC = "italic"
+    TEXT = None
+    BOLD = "b"
+    ITALIC = "i"
     CODE = "code"
-    LINK = "link"
-    IMAGE = "image"
+    LINK = "a"
+    IMAGE = "img"
 
 
 class TextNode():
@@ -32,24 +32,24 @@ def text_node_to_html_node(text_node: TextNode):
     alt = None
     props = None
     match text_node.text_type:
-        case TextType.NORMAL:
-            tag = None
+        case TextType.TEXT:
+            tag = text_type.value
             text = text_node.text
         case TextType.BOLD:
-            tag = "b"
+            tag = text_type.value
             text = text_node.text
         case TextType.ITALIC:
-            tag = "i"
+            tag = text_type.value
             text = text_node.text
         case TextType.CODE:
-            tag = 'code'
+            tag = text_type.value
             text = text_node.text
         case TextType.LINK:
-            tag = "a"
+            tag = text_type.value
             text = text_node.text
             href = text_node.url
         case TextType.IMAGE:
-            tag = "img"
+            tag = text_type.value
             text = ""
             src = text_node.url
             alt = text_node.text
