@@ -33,23 +33,23 @@ def text_node_to_html_node(text_node: TextNode):
     props = None
     match text_node.text_type:
         case TextType.TEXT:
-            tag = text_type.value
+            tag = text_node.text_type.value
             text = text_node.text
         case TextType.BOLD:
-            tag = text_type.value
+            tag = text_node.text_type.value
             text = text_node.text
         case TextType.ITALIC:
-            tag = text_type.value
+            tag = text_node.text_type.value
             text = text_node.text
         case TextType.CODE:
-            tag = text_type.value
+            tag = text_node.text_type.value
             text = text_node.text
         case TextType.LINK:
-            tag = text_type.value
+            tag = text_node.text_type.value
             text = text_node.text
             href = text_node.url
         case TextType.IMAGE:
-            tag = text_type.value
+            tag = text_node.text_type.value
             text = ""
             src = text_node.url
             alt = text_node.text
