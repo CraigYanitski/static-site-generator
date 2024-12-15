@@ -177,10 +177,10 @@ class TestUtil(unittest.TestCase):
         self.assertIn("<ol><li>This is an ordered list</li>" 
                       + "<li>Right now we do not verify an increasing number</li>" 
                       + "<li>But this is the best we can do</li></ol>", html)
-        self.assertIn("<blockquote><p>We also do not accept nested blocks</p>"
-                      + "<p>This is likely the next step for improving block parsing</p>"
-                      + "<p>This can probably happen if we stop stripping the "
-                      + "whitespace from each line</p></blockquote>", 
+        self.assertIn("<blockquote>We also do not accept nested blocks"
+                      + "This is likely the next step for improving block parsing"
+                      + "This can probably happen if we stop stripping the "
+                      + "whitespace from each line</blockquote>", 
                       html)
 
     def test_extract_title(self) -> None:

@@ -79,7 +79,7 @@ def text_to_textnodes(text) -> list:
 
 def markdown_to_blocks(markdown) -> list:
     #blocks: list = list(map(lambda x: x.strip(), markdown.split('\n\n')))
-    blocks: list = list(map(lambda x: '\n'.join(list(map(lambda y: y.strip(), x.split('\n')))), 
+    blocks: list = list(map(lambda x: '\n'.join(list(map(lambda y: y.strip(), x.strip('\n').split('\n')))), 
                             re.split(r"\r?\n\s*\n+", markdown)))
     while '' in blocks:
         blocks.remove('')
@@ -120,8 +120,14 @@ def markdown_to_html_node(markdown) -> ParentNode:
             textnodes: list = text_to_textnodes(text)
             nodes: list = list(map(text_node_to_html_node, textnodes))
         elif block_type == "pre":
-            text: str = ' '.join(map(lambda l: l.strip(), block.strip('`\n').split('\n')))
+            text: str = block.strip('`').strip('\n')
             nodes: list = [LeafNode("code", text)]
+        elif block_type == "blockquote":
+            nodes: list = []
+            for line in block.split('\n'):
+                textnodes = text_to_textnodes(line[1:].strip())
+                for textnode in textnodes:
+                    nodes.append(text_node_to_html_node(textnode))
         elif block_type in ["blockquote", "ul", "ol"]:
             nodes: list = []
             for line in block.split('\n'):
@@ -133,7 +139,7 @@ def markdown_to_html_node(markdown) -> ParentNode:
                     node_tag: str = "li"
                 else:
                     i_text: int = line.index('>') + 1
-                    node_tag: str = "p"
+                    node_tag: str = None
                 textnodes: list = text_to_textnodes(line[i_text:].strip())
                 nodes.append(ParentNode(node_tag, children=list(map(text_node_to_html_node, textnodes))))
         else:
