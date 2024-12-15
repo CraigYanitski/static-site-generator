@@ -128,7 +128,7 @@ def markdown_to_html_node(markdown) -> ParentNode:
                 textnodes = text_to_textnodes(line[1:].strip())
                 for textnode in textnodes:
                     nodes.append(text_node_to_html_node(textnode))
-        elif block_type in ["blockquote", "ul", "ol"]:
+        elif block_type in ["ul", "ol"]:
             nodes: list = []
             for line in block.split('\n'):
                 if block_type == "ol":
@@ -137,9 +137,8 @@ def markdown_to_html_node(markdown) -> ParentNode:
                 elif block_type == "ul":
                     i_text: int = 1
                     node_tag: str = "li"
-                else:
-                    i_text: int = line.index('>') + 1
-                    node_tag: str = None
+                if line[i_text:].strip()[:3] in ["[ ]", "[x]", "[X]"]:
+                    i_text = line.index(']') + 1
                 textnodes: list = text_to_textnodes(line[i_text:].strip())
                 nodes.append(ParentNode(node_tag, children=list(map(text_node_to_html_node, textnodes))))
         else:
