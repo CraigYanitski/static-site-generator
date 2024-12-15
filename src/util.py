@@ -144,3 +144,20 @@ def markdown_to_html_node(markdown) -> ParentNode:
     print(f"HTML type {htmlnode.tag}")
     return htmlnode
 
+def extract_block_type(markdown, tag) -> list:
+    blocks: list = markdown_to_blocks(markdown)
+    tag_blocks: list = []
+    for block in blocks:
+        if tag == block_to_block_type(block):
+            tag_blocks.append(block)
+    return tag_blocks
+
+def extract_title(markdown) -> str:
+    blocks: list = extract_block_type(markdown, "h1")
+    if len(blocks) == 1:
+        return blocks[0].strip('# ')
+    raise ValueError("More than one title in markdown text: extract_title can currently only return one title.")
+
+
+    
+

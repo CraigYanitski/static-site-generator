@@ -11,7 +11,8 @@ from util import (split_nodes_delimiter,
                   text_to_textnodes,
                   markdown_to_blocks,
                   block_to_block_type,
-                  markdown_to_html_node)
+                  markdown_to_html_node,
+                  extract_title)
 
 
 class TestUtil(unittest.TestCase):
@@ -181,4 +182,24 @@ class TestUtil(unittest.TestCase):
                       + "<p>This can probably happen if we stop stripping the "
                       + "whitespace from each line</p></blockquote>", 
                       html)
+
+    def test_extract_title(self) -> None:
+        markdown: str = """#   `Hello world`   
+                    
+                           some random paragraph of text.
+
+                           * some list
+                           * just to fully test things"""
+        title: str = extract_title(markdown)
+        self.assertEqual("`Hello world`", title)
+
+    def test_extract_title_error(self) -> None:
+        markdown: str = """# Title
+                           
+                           some random text in this section
+
+                           # New title
+
+                           Since some files incorrectly have multiple title headers"""
+        self.assertRaises(ValueError, extract_title, markdown)
 
