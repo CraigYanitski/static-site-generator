@@ -6,53 +6,47 @@ import re
 from pprint import pprint
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type) -> list:
-    match delimiter:
-        case '`':
-            new_type: TextType = TextType.CODE
-        case '**':
-            new_type: TextType = TextType.BOLD
-        case '*':
-            new_type: TextType = TextType.ITALIC
-        case _:
-            raise Exception(f"Invalid text type: {text_type}")
     nodes: list = []
     for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            nodes.append(node)
+            continue
+
         if node.text.count(delimiter) == 0:
             nodes.append(node)
-        elif node.text.count(delimiter) > 1:
-            i_start: int = node.text.index(delimiter)
-            i_end: int = i_start + len(delimiter) + node.text[i_start+len(delimiter):].index(delimiter)
-            nodes.append(TextNode(node.text[:i_start], text_type))
-            nodes.append(TextNode(node.text[i_start+len(delimiter):i_end], new_type))
-            nodes.append(TextNode(node.text[i_end+len(delimiter):], text_type))
         else:
-            raise Exception(f"Text node {node} cannot be parsed: too many {delimiter} to parse")
+            old_parts = node.text.split(delimiter)
+            parts = []
+            for i, part in enumerate(old_parts):
+                if part == "":
+                    continue
+                if i % 2 == 0:
+                    parts.append(TextNode(part, TextType.TEXT))
+                else:
+                    parts.append(TextNode(part, text_type))
+
+            nodes.extend(parts)
     return nodes
 
 def split_nodes_img_a(old_nodes, function, prefix='[', text_type=TextType.LINK) -> list:
     nodes: list = []
     for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            nodes.append(node)
+            continue
+
         matches: list = function(node.text)
         if len(matches) == 0:
             nodes.append(node)
             continue
-        text_len: int = len(node.text)
-        i_end: int = 0
-        for i, match in enumerate(matches):
-            i_start: int = node.text.index(prefix + match[0])
-            i_end: int = text_len - node.text[::-1].index(')' + match[1][::-1])
-            if i != len(matches) - 1:
-                i_next: int = node.text.index(prefix + matches[i+1][0])
-            else:
-                i_next: int = text_len
-            if i == 0:
-                i_previous: int = 0
-            else:
-                i_previous: int = text_len - node.text[::-1].index(')' + matches[i-1][1][::-1])
-            nodes.append(TextNode(node.text[i_previous:i_start], node.text_type))
-            nodes.append(TextNode(match[0], text_type, match[1]))
-        if i_end != text_len:
-            nodes.append(TextNode(node.text[i_end:], node.text_type))
+
+        line = node.text
+        for match in matches:
+            parts = line.split(f"{prefix}{match[0]}]({match[1]})")
+            nodes.append(TextNode(parts[0], TextType.TEXT))
+            nodes.append(TextNode(match[0], text_type, url=match[1]))
+            line = parts[1]
+        nodes.append(TextNode(line, TextType.TEXT))
     return nodes
 
 def split_nodes_image(old_nodes) -> list:
@@ -66,20 +60,21 @@ def extract_markdown_images(text) -> list:
     return matches
 
 def extract_markdown_links(text) -> list:
-    matches: list = re.findall(r"[^!]\[(.*?)\]\((.*?)\)", text)
+    matches: list = re.findall(r"\[(.*?)\]\((.*?)\)", text)
     return matches
 
 def text_to_textnodes(text) -> list:
-    nodes: list = split_nodes_delimiter([TextNode(text, TextType.TEXT)], '**', TextType.TEXT)
-    nodes: list = split_nodes_delimiter(nodes, '*', TextType.TEXT)
-    nodes: list = split_nodes_delimiter(nodes, '`', TextType.TEXT)
+    nodes = [TextNode(text, TextType.TEXT)]
+    nodes: list = split_nodes_delimiter(nodes, '**', TextType.BOLD)
+    nodes: list = split_nodes_delimiter(nodes, '_', TextType.ITALIC)
+    nodes: list = split_nodes_delimiter(nodes, '`', TextType.CODE)
     nodes: list = split_nodes_image(nodes)
     nodes: list = split_nodes_link(nodes)
     return nodes
 
 def markdown_to_blocks(markdown) -> list:
     #blocks: list = list(map(lambda x: x.strip(), markdown.split('\n\n')))
-    blocks: list = list(map(lambda x: '\n'.join(list(map(lambda y: y.strip(), x.strip('\n').split('\n')))), 
+    blocks: list = list(map(lambda x: '\n'.join(list(map(lambda y: y, x.strip('\n').split('\n')))), 
                             re.split(r"\r?\n\s*\n+", markdown)))
     while '' in blocks:
         blocks.remove('')
@@ -90,7 +85,7 @@ def block_to_block_type(block) -> str:
         return  f"h{block[:6].count('#')}"
     elif "```" == block[:3] and "```" == block[-3:]:
         return "pre"
-    elif all('> ' == line[:2] for line in block.split('\n')):
+    elif all('>' == line[0] for line in block.split('\n')):
         return "blockquote"
     elif all(('* ' in line[:2] or '- ' in line[:2]) for line in block.split('\n')):
         return "ul"
