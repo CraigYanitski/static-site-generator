@@ -120,7 +120,10 @@ def markdown_to_html_node(markdown) -> ParentNode:
         elif block_type == "blockquote":
             nodes: list = []
             for line in block.split('\n'):
-                textnodes = text_to_textnodes(line[1:].strip())
+                text = line[1:].strip()
+                if text == "":
+                    text = "\n"
+                textnodes = text_to_textnodes(text)
                 for textnode in textnodes:
                     nodes.append(text_node_to_html_node(textnode))
         elif block_type in ["ul", "ol"]:
